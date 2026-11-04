@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include "cellsight/lut2d.hpp"
 #include <Eigen/Dense>
 #include <vector>
@@ -30,7 +31,7 @@ TEST_CASE("interpolation works") {
     Lut2D lut(x, y, table);
 
     // midpoint should be average
-    REQUIRE(lut(0.5, 0.5) == Approx(1.0));
+    REQUIRE(lut(0.5, 0.5) == Catch::Approx(1.0));
 }
 
 TEST_CASE("clamps outside the grid") {
