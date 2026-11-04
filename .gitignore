@@ -2,6 +2,7 @@
 .venv/
 .vscode/
 build/
+dist/
 data/
 *.so
 __pycache__/
