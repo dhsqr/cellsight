@@ -1,18 +1,18 @@
-#pragma once 
-#include <iostream>
+#pragma once
 #include <Eigen/Dense>
 #include <vector>
 
-using namespace std;
+namespace cellsight {
 
-class  Lut2D{
+class Lut2D {
+public:
+    Lut2D(std::vector<double> x, std::vector<double> y, Eigen::MatrixXd table);
+    double operator()(double x, double y) const;
 
-public :
-            Lut2D(vector<double> x ,vector <double> y,Eigen::MatrixXd table);
-            double operator() ( double x , double y) const;
-
-private : 
-     vector<double> x_;
-     vector<double> y_;
-     Eigen::MatrixXd table_;
+private:
+    std::vector<double> x_;
+    std::vector<double> y_;
+    Eigen::MatrixXd table_;
 };
+
+}  // namespace cellsight
