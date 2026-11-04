@@ -2,6 +2,7 @@
 #include <catch2/catch_approx.hpp>
 #include "cellsight/lut2d.hpp"
 #include <Eigen/Dense>
+#include <algorithm>
 #include <limits>
 #include <stdexcept>
 #include <vector>
@@ -110,4 +111,72 @@ TEST_CASE("rejects bad grids and NaN") {
           3.0, 4.0;
     Lut2D lut({0.0, 1.0}, {0.0, 1.0}, ok);
     REQUIRE_THROWS_AS(lut(std::numeric_limits<double>::quiet_NaN(), 0.0), std::invalid_argument);
+}
+
+TEST_CASE("d_dx of a bilinear polynomial is exact") {
+    auto clamp_y = [](double y) {
+        return std::clamp(y, -1.0, 3.0);
+    };
+    auto f = [](double x, double y) {
+        return 1.0 + 2.0 * x + 3.0 * y + 0.5 * x * y;
+    };
+    vector<double> x = {0.0, 1.0, 2.0};
+    vector<double> y = {-1.0, 0.5, 3.0};
+    Eigen::MatrixXd table(3, 3);
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            table(i, j) = f(x[i], y[j]);
+        }
+    }
+
+    Lut2D lut(x, y, table);
+
+    auto expect = [&](double xq, double yq) {
+        const double slope = 2.0 + 0.5 * clamp_y(yq);
+        REQUIRE(lut.d_dx(xq, yq) == Catch::Approx(slope).margin(1e-12));
+    };
+
+    expect(0.3, -0.2);   // interior
+    expect(1.2, 1.0);    // interior, other cell
+    expect(0.3, -5.0);   // y below the grid
+    expect(1.2, 10.0);   // y above the grid
+    expect(-2.0, 0.0);   // x left of the grid, edge cell
+    expect(5.0, 1.0);    // x right of the grid, edge cell
+}
+
+TEST_CASE("d_dx matches a central difference inside a cell") {
+    vector<double> x = {0.0, 0.1, 0.5, 1.0};
+    vector<double> y = {-10.0, 0.0, 25.0, 45.0};
+    Eigen::MatrixXd table(4, 4);
+    table << 1.0,  2.0,  3.0,  4.0,
+             5.0,  8.0,  6.0,  9.0,
+             4.0,  1.0,  7.0,  2.0,
+             3.0,  5.0,  9.0,  1.0;
+
+    Lut2D lut(x, y, table);
+    const double h = 1e-6;
+
+    auto check = [&](double xq, double yq) {
+        const double finite = (lut(xq + h, yq) - lut(xq - h, yq)) / (2.0 * h);
+        REQUIRE(lut.d_dx(xq, yq) == Catch::Approx(finite).margin(1e-6));
+    };
+
+    check(0.3, 10.0);   // cell x (0.1, 0.5), y (0, 25)
+    check(0.75, -4.0);  // cell x (0.5, 1), y (-10, 0)
+}
+
+TEST_CASE("d_dx rejects non-finite axes and NaN queries") {
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    const double inf = std::numeric_limits<double>::infinity();
+    Eigen::MatrixXd table(2, 2);
+    table.setZero();
+
+    REQUIRE_THROWS_AS(Lut2D({0.0, nan}, {0.0, 1.0}, table), std::invalid_argument);
+    REQUIRE_THROWS_AS(Lut2D({0.0, 1.0}, {nan, 2.0}, table), std::invalid_argument);
+    REQUIRE_THROWS_AS(Lut2D({0.0, inf}, {0.0, 1.0}, table), std::invalid_argument);
+    REQUIRE_THROWS_AS(Lut2D({0.0, 1.0}, {-inf, 1.0}, table), std::invalid_argument);
+
+    Lut2D lut({0.0, 1.0}, {0.0, 1.0}, table);
+    REQUIRE_THROWS_AS(lut.d_dx(nan, 0.5), std::invalid_argument);
+    REQUIRE_THROWS_AS(lut.d_dx(0.5, nan), std::invalid_argument);
 }
