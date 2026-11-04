@@ -46,4 +46,4 @@ set_target_properties(cellsight_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 pybind11_add_module(_core bindings/module.cpp)
 target_link_libraries(_core PRIVATE cellsight_core)
 
-install(TARGETS _core LIBRARY DESTINATION cellsight COMPONENT python)
+install(TARGETS _core LIBRARY DESTINATION cellsight )
