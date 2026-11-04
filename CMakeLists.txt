@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15...4.0)
+cmake_minimum_required(VERSION 3.18...4.0)
 project(cellsight LANGUAGES CXX)
 
 include (FetchContent)
@@ -8,19 +8,25 @@ FetchContent_Declare(
 Eigen 
 GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
   GIT_TAG 3.4.0
+  GIT_SHALLOW TRUE
 )
+
+# Stops Eigen from building its own tests, docs, and extra config files.
+set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
+set(EIGEN_BUILD_DOC OFF CACHE BOOL "" FORCE)
+set(EIGEN_BUILD_PKGCONFIG OFF CACHE BOOL "" FORCE)
 # downloading eigen and making it available for file
 FetchContent_MakeAvailable (Eigen)
 
 #now time fr catch2 ... creating a switch so for normal build from pip we can skip - defaaultOFF
 option(CELLSIGHT_BUILD_TESTS "Build tests" OFF)
-
 # will turn ON then only we use catch2 for testing otherwise no need to install for user -_-
 if(CELLSIGHT_BUILD_TESTS)
 FetchContent_Declare(
     Catch2
     GIT_REPOSITORY https://github.com/catchorg/Catch2.git
     GIT_TAG v3.5.2
+    GIT_SHALLOW TRUE
 )
 #downlaoding catch2
 FetchContent_MakeAvailable(Catch2)
@@ -34,9 +40,10 @@ find_package(pybind11 CONFIG REQUIRED)
 add_library(cellsight_core STATIC cpp/src/lut2d.cpp)
 target_include_directories(cellsight_core PUBLIC cpp/include)
 target_link_libraries(cellsight_core PUBLIC Eigen3::Eigen)
-set_target_properties(cellsight_core PROPERTIES POSITION_INDEPENDENT_CODE ON CXX_STANDARD 17)
+target_compile_features(cellsight_core PUBLIC cxx_std_17)
+set_target_properties(cellsight_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 pybind11_add_module(_core bindings/module.cpp)
 target_link_libraries(_core PRIVATE cellsight_core)
 
-install(TARGETS _core LIBRARY DESTINATION cellsight)
+install(TARGETS _core LIBRARY DESTINATION cellsight COMPONENT python)
