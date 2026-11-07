@@ -9,6 +9,7 @@ public:
     Lut2D(std::vector<double> x, std::vector<double> y, Eigen::MatrixXd table);
     double operator()(double x, double y) const;
     double d_dx(double x, double y) const;
+    const Eigen::MatrixXd& table() const { return table_; }
 
 private:
     std::vector<double> x_;

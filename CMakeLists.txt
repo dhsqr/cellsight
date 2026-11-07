@@ -37,7 +37,7 @@ set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
 
 # core library with Lut2D
-add_library(cellsight_core STATIC cpp/src/lut2d.cpp)
+add_library(cellsight_core STATIC cpp/src/lut2d.cpp cpp/src/ecm.cpp)
 target_include_directories(cellsight_core PUBLIC cpp/include)
 target_link_libraries(cellsight_core PUBLIC Eigen3::Eigen)
 target_compile_features(cellsight_core PUBLIC cxx_std_17)
