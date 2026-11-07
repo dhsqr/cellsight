@@ -55,8 +55,8 @@ double terminal_voltage(const EcmParams& p,
     require(std::isfinite(temp_c), "temp");
     require(std::isfinite(x.soc) && std::isfinite(x.v1) && std::isfinite(x.v2),
             "state");
-    require(std::isfinite(cap_scale), "cap_scale");
-    require(std::isfinite(r0_scale), "r0_scale");
+    require(std::isfinite(cap_scale) && cap_scale > 0.0, "cap_scale");
+    require(std::isfinite(r0_scale) && r0_scale > 0.0, "r0_scale");
 
     const double ocv = p.ocv(x.soc, temp_c);
     const double r0 = p.r0(x.soc, temp_c);

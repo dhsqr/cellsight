@@ -55,7 +55,7 @@ install(TARGETS _core LIBRARY DESTINATION cellsight COMPONENT python)
 
 
 if(CELLSIGHT_BUILD_TESTS)
-    add_executable(test_cellsight cpp/tests/test_lut2d.cpp)
+    add_executable(test_cellsight cpp/tests/test_lut2d.cpp cpp/tests/test_ecm.cpp)
     target_link_libraries(test_cellsight PRIVATE cellsight_core Catch2::Catch2WithMain)
     list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
     include(Catch)
