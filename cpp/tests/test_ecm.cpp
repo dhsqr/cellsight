@@ -67,7 +67,7 @@ TEST_CASE("discharge")
         state = ecm_step(params, state, current_a, temp_c, dt_s);
     }
 
-    REQUIRE(state.soc == Catch::Approx(0.0).margin(1e-10));
+    REQUIRE(state.soc == Catch::Approx(0.0).epsilon(0.0).margin(1e-10));
 }
 
 TEST_CASE("charging efficiency")
@@ -87,7 +87,7 @@ TEST_CASE("charging efficiency")
         state = ecm_step(params, state, current_a, temp_c, dt_s);
     }
 
-    REQUIRE(state.soc == Catch::Approx(0.98).margin(1e-10));
+    REQUIRE(state.soc == Catch::Approx(0.98).epsilon(0.0).margin(1e-10));
 }
 
 TEST_CASE("capacity scaling")
@@ -108,7 +108,7 @@ TEST_CASE("capacity scaling")
         state = ecm_step(params, state, current_a, temp_c, dt_s, cap_scale);
     }
 
-    REQUIRE(state.soc == Catch::Approx(0.0).margin(1e-10));
+    REQUIRE(state.soc == Catch::Approx(0.0).epsilon(0.0).margin(1e-10));
 }
 
 TEST_CASE("zero-current charge conservation")
@@ -151,7 +151,7 @@ TEST_CASE("RC voltage buildup")
             state = ecm_step(params, state, current_a, temp_c, dt_s);
         }
 
-        REQUIRE(state.v1 == Catch::Approx(expected).margin(1e-12));
+        REQUIRE(state.v1 == Catch::Approx(expected).epsilon(0.0).margin(1e-12));
     }
 }
 
@@ -179,9 +179,9 @@ TEST_CASE("relaxation")
     state = ecm_step(params, state, 0.0, 25.0, dt_s);
 
     REQUIRE(state.v1 ==
-            Catch::Approx(v0 * std::exp(-dt_s / (r1 * c1))).margin(1e-12));
+            Catch::Approx(v0 * std::exp(-dt_s / (r1 * c1))).epsilon(0.0).margin(1e-12));
     REQUIRE(state.v2 ==
-            Catch::Approx(v0 * std::exp(-dt_s / (r2 * c2))).margin(1e-12));
+            Catch::Approx(v0 * std::exp(-dt_s / (r2 * c2))).epsilon(0.0).margin(1e-12));
     REQUIRE(state.soc == soc0);
 }
 
@@ -209,13 +209,13 @@ TEST_CASE("terminal voltage")
     const double discharge_v = terminal_voltage(
         params, state, discharge_a, temp_c, cap_scale, r0_scale);
     REQUIRE(discharge_v == Catch::Approx(ocv - r0 * r0_scale * discharge_a - v1 - v2)
-                               .margin(1e-12));
+                               .epsilon(0.0).margin(1e-12));
 
     const double charge_a = -4.0;
     const double charge_v = terminal_voltage(
         params, state, charge_a, temp_c, cap_scale, r0_scale);
     REQUIRE(charge_v ==
-            Catch::Approx(ocv - r0 * r0_scale * charge_a - v1 - v2).margin(1e-12));
+            Catch::Approx(ocv - r0 * r0_scale * charge_a - v1 - v2).epsilon(0.0).margin(1e-12));
 
     REQUIRE(state.soc == before.soc);
     REQUIRE(state.v1 == before.v1);
