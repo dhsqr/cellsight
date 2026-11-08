@@ -37,7 +37,7 @@ set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
 
 # core library with Lut2D
-add_library(cellsight_core STATIC cpp/src/lut2d.cpp cpp/src/ecm.cpp)
+add_library(cellsight_core STATIC cpp/src/lut2d.cpp cpp/src/ecm.cpp cpp/src/simulate.cpp)
 target_include_directories(cellsight_core PUBLIC cpp/include)
 target_link_libraries(cellsight_core PUBLIC Eigen3::Eigen)
 target_compile_features(cellsight_core PUBLIC cxx_std_17)
@@ -55,7 +55,7 @@ install(TARGETS _core LIBRARY DESTINATION cellsight COMPONENT python)
 
 
 if(CELLSIGHT_BUILD_TESTS)
-    add_executable(test_cellsight cpp/tests/test_lut2d.cpp cpp/tests/test_ecm.cpp)
+    add_executable(test_cellsight cpp/tests/test_lut2d.cpp cpp/tests/test_ecm.cpp cpp/tests/test_simulate.cpp)
     target_link_libraries(test_cellsight PRIVATE cellsight_core Catch2::Catch2WithMain)
     list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
     include(Catch)

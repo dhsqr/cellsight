@@ -70,6 +70,28 @@ TEST_CASE("discharge")
     REQUIRE(state.soc == Catch::Approx(0.0).epsilon(0.0).margin(1e-10));
 }
 
+TEST_CASE("discharge ignores charging efficiency")
+{
+    // 1C for one hour removes one SOC. eta_charge is 0.98, so applying it
+    // on discharge would stop at 0.02.
+    EcmParams params = make_cell(2.5, 0.98);
+    EcmState state;
+    state.soc = 1.0;
+    state.v1 = 0.0;
+    state.v2 = 0.0;
+
+    constexpr double current_a = 2.5;
+    constexpr double temp_c = 25.0;
+    constexpr double dt_s = 1.0;
+    constexpr int steps = 3600;
+
+    for (int step = 0; step < steps; ++step) {
+        state = ecm_step(params, state, current_a, temp_c, dt_s);
+    }
+
+    REQUIRE(state.soc == Catch::Approx(0.0).epsilon(0.0).margin(1e-10));
+}
+
 TEST_CASE("charging efficiency")
 {
     EcmParams params = make_cell(2.5, 0.98);
@@ -127,8 +149,11 @@ TEST_CASE("zero-current charge conservation")
 
 TEST_CASE("RC voltage buildup")
 {
+    // tau1 = R1*C1 = 100 s. tau2 = R2*C2 = 400 s.
     constexpr double r1 = 0.05;
     constexpr double c1 = 2000.0;
+    constexpr double r2 = 0.02;
+    constexpr double c2 = 20000.0;
     constexpr double current_a = 4.0;
     constexpr double temp_c = 25.0;
     constexpr double t_end_s = 2000.0;
@@ -136,9 +161,13 @@ TEST_CASE("RC voltage buildup")
     EcmParams params = make_cell(2.5);
     params.r1 = constant_table(r1);
     params.c1 = constant_table(c1);
+    params.r2 = constant_table(r2);
+    params.c2 = constant_table(c2);
 
-    const double expected =
+    const double expected_v1 =
         r1 * current_a * (1.0 - std::exp(-t_end_s / (r1 * c1)));
+    const double expected_v2 =
+        r2 * current_a * (1.0 - std::exp(-t_end_s / (r2 * c2)));
 
     for (double dt_s : {1.0, 10.0, 100.0}) {
         EcmState state;
@@ -151,7 +180,8 @@ TEST_CASE("RC voltage buildup")
             state = ecm_step(params, state, current_a, temp_c, dt_s);
         }
 
-        REQUIRE(state.v1 == Catch::Approx(expected).epsilon(0.0).margin(1e-12));
+        REQUIRE(state.v1 == Catch::Approx(expected_v1).epsilon(0.0).margin(1e-12));
+        REQUIRE(state.v2 == Catch::Approx(expected_v2).epsilon(0.0).margin(1e-12));
     }
 }
 
